@@ -57,26 +57,28 @@ By the final review, this README should clearly show:
 
 ## 1.1 Studio / Group Name
 
-`Project^2`
+`SignalScope`
 
 ## 1.2 Team Members
 
 | Name                  | Primary Role                    | Secondary Role   | Strengths Brought to the Project |
 | --------------        | ------------------------------- | --------------   | -------------------------------- |
-| `Mrugendra Vasmatkar` | `[Electronics / Coding / App ]` | `Documentation`  | `Documentation, Gift of Gab `|
-| `Jyoti Bagate`        | `[Electronics / Fabrication]`   | `[Coding]`       | `Material Handling, Hardware`    |
+| `Aryan Bharti`        | `[Electronics / Coding / App ]` | `Documentation`  | `Documentation, Gift of Gab `    |
+| `Aaditi Chougule`     | `[Electronics / Fabrication]`   | `[Coding]`       | `Material Handling, Hardware`    |
+| `Akshata Sarawadekar` | ``|``|``|
+|`Sujal Shetty`         |``|``|``|
 
 ## 1.3 Project Title
 
-`"Project Project"`
+`"DSO Signal Analyzer"`
 
-`(because Project-or)`
+`(because Logic Analyzer)`
 
 <img width="1600" height="1131" alt="image" src="https://github.com/user-attachments/assets/c64bfbd4-b3b7-43d9-83ad-c203a5aa11bc" />
 
 ## 1.4 One-Line Pitch
 
-`A projected, fully customizable time portal where engineering education is done through PUBG battlefield in the comfort of our home`
+`Educating Collegites on DSO, Analyzing Logical Signals without making it confusing but rather Easy and Fun`
 
 ## 1.5 Expanded Project Idea
 
