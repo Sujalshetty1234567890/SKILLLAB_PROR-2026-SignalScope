@@ -78,7 +78,7 @@ By the final review, this README should clearly show:
 
 ## 1.4 One-Line Pitch
 
-`Educating Collegites on DSO, Analyzing Logical Signals without making it confusing but rather Easy and Fun`
+`Educating Early Teens and Collegites on DSO, Analyzing Logical Signals without making it confusing but rather Easy and Fun`
 
 ## 1.5 Expanded Project Idea
 
@@ -101,7 +101,7 @@ List what inspired the project.
 
 | Source Type | Title / Link                                                        | What Inspired You                                                                         |
 | ----------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `[Video]`   | `https://www.instagram.com/reel/DW4CT7WCDry/?igsh=cXg3dzAxYmdncDBo` | `How projection mapping can be used to create interactive digital + physical experiences` |
+| `[Video]`   | `https://youtube.com/shorts/fqcnga908rw?si=p3kwRwn5LOU0oAG_`        | `How Signals Analyzing can be made Easy and Fun for Early Interest induction in Early Teens` |
 |             |                                                                     |                                                                                           |
 |             |                                                                     |                                                                                           |
 
@@ -109,7 +109,8 @@ List what inspired the project.
 
 What makes your project original?
 
-**Response:**  
+**Response:**
+`The Square waves are generated on Graphic LCD, making it fun to work with rather than the traditional ways,
 
 
 ---
