@@ -89,7 +89,7 @@ In 1–2 paragraphs, explain:
 - what technologies are involved.
 
 **Response:**  
-`A projected and fully customizable time portal can transform engineering education into an immersive PUBG-style battlefield experience from the comfort of home. In this environment, students can learn engineering concepts by entering a virtual battlefield where challenges, obstacles, and missions are designed around real technical problems. Instead of passively studying theory, learners actively apply concepts such as electronics, coding, sensors, robotics, mechanics, and system design to complete missions, solve problems, and progress through different levels. This approach makes engineering education more interactive, engaging, and practical by combining gaming, simulation, and hands-on problem-solving in a familiar and exciting format.`
+`Creating a Analyzer using an FPGA and Arduino UNO, for easier and fun way to understand the working of a DSO and see the waves on the Craohic LCD to make it even better and worth learning fpr the early teens, there wont be much confusion for the working as there will only be only one switch taking away the confusion created by the traditional methods .`
 
 ---
 
