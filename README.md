@@ -256,24 +256,34 @@ Add a sketch with labels showing:
 
 | Component                 | Quantity | Purpose                               |
 | ------------------------- | --------:| ------------------------------------- |
-| `[FPGA]`                  | `1`      | `[Main controller]`                   |
+| `[FPGA Artix-7 Basys-3]`  | `1`      | `[Main controller]`                   |
 | `[ESP 32]`                | `1`      | `[Input Signal Generator]`            |
-| `[Arduino UNO]`           | `2`      | `[Output signal Decider]`                     |
-| `[Buck Converter]`        | `1`      | `[Power ESP32]`                       |
-| `[Li Ion Battery Pack]`   | `2`      | `[Power]`                             |
-| `[Projector]`             | `1`      | `[Display obstacles]`                 |
-| `Camera (Webcam / Phone)` | `1`      | `[Tracks car position using markers]` |
+| `[Arduino UNO]`           | `1`      | `[Output signal Displayer]`           |
+ 
 
 ## 7.2 Wiring Plan
 
 Describe the main electrical connections.
 
-**sample Response:**  
-`The RASPI is connected to the motor driver (L298N) using four GPIO pins (18,19; 22,23) to control motor direction (IN1, IN2, IN3, IN4). Two PWM-capable pins (ENA and ENB; 25 and 26) are connected to control the speed of each motor.
+**Response:**  
+`Pin connections from fpga (pmod JA) to arduino uno
+1) J1 to D10
+2) L2 to D11
+3) J2 to D12
+4) gnd to gnd
 
-The motors are connected to the output terminals of the motor driver. The motor driver is powered directly by the battery pack (higher voltage), while the ESP32 receives regulated 5V from the buck converter.
+Pin connections from fpga (pmod JB) to esp 32
+1) A14 to P4
+2) A16 to P5
+3) B15 to P18
+4) B16 to P19
+5) gnd to gnd
 
-All components share a common ground to ensure stable operation. The projector and camera are connected to the laptop, which handles tracking and game logic separately.`
+Switches to control channel selection (manual selection)
+1) V17 - channel 1 (high frequency band)
+2) V16 - channel 2 (medium frequency band)
+3) W16 - channel 3 (low frequency band)
+4) W15 - channel 4 (ideal frequency band)`
 
 ## 7.3 Circuit Diagram/architecture diagram
 
@@ -288,10 +298,8 @@ Insert a hand-drawn or software-made circuit diagram.
 
 | Question         | Response                                                                                                                                          |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Power source     | `Battery (Li-ion pack)`                                                                                                                           |
-| Voltage required | `~6–8.4V for motors (via driver), stepped down to 5V for ESP32 (buck converter)`                                                                  |
-| Current concerns | `Motors can draw high current under load, which may cause voltage drops affecting ESP32 and WiFi stability`                                       |
-| Safety concerns  | `Avoid over-discharging Li-ion batteries, ensure proper voltage regulation, prevent short circuits, and secure wiring to avoid loose connections` |
+| Voltage required | `3.3V for ESP32, Arduino and FPGA`                                                                                                                |
+ 
 
 ---
 
@@ -301,10 +309,9 @@ Insert a hand-drawn or software-made circuit diagram.
 
 | Tool / Platform                | Purpose                                        |
 | ------------------------------ | ---------------------------------------------- |
-| `[MicroPython]`                | `Control ESP32`                                |
-| `[Python/PyGame/OpenCV]`       | `Track markers, game logic, create projection` |
-| `[Fusion/Blender/Illustrator]` | `[Prototyping structure]`                      |
-|                                |                                                |
+| `[Vivado]`                     | `Control FPGA`                                 |
+| `[Arduino IDE]`                | `to control both the ESP32 and the Arduino. ` |
+ 
 
 ## 8.2 Software Logic/Algorithm
 
@@ -323,20 +330,12 @@ Include:
 **Response:**  
 `
 
-- **Sample Startup behavior:**  
-  The Raspi/FPGA initializes motor pins, PWM control, and starts a WiFi access point with a web server. The laptop initializes camera input, tracking system, and projection mapping.
-- **Input handling:**  
-  Movement commands are received from the laptop (pygame sends http requests)
-- **Sensor reading:**  
-  The camera continuously captures frames, and OpenCV detects ArUco markers to determine the car’s position and orientation.
-- **Decision logic:**  
-  The system maps the car’s position into a virtual coordinate system and checks for nearby obstacles or collisions. If movement is valid, the command is allowed; if not, it is blocked or replaced with a feedback action (like a slight shake).
-- **Output behavior:**  
-  The ESP32 drives the motors using PWM signals to control speed and direction. The projector displays the updated game environment, including obstacles, targets, and feedback visuals.
-- **Communication logic:**  
-  The laptop sends HTTP requests (e.g., `/forward`, `/left`) to the ESP32 over WiFi. The ESP32 parses these commands and executes motor actions.
-- **Reset behavior:**  
-  If no command is received within a short timeout, the ESP32 stops the motors. The game resets when a level is completed or restarted.`
+-Startup behavior: The ESP32 boots and immediately begins running high-speed micros() timers to generate waves. The FPGA initializes the 100ms stopwatch to zero. The Arduino opens the 115200 baud serial connection. 
+-Input handling: The user flips switches (SW0, SW1, SW2) on the Basys 3 board to select which hardware channel to analyze. 
+-Board Reading: The FPGA reads the incoming voltage on the selected Pmod pin. It passes this raw signal through a 1,000-clock-cycle debounce filter to eliminate physical wire ringing and crosstalk. 
+-Decision logic: A rising edge detector counts the clean pulses over exactly 100ms. The classifier uses mathematically isolated "buckets" (e.g., <=3 for Slow, <=15 for Mid, <=45 for Fast) to assign a state to the wave. 
+-Output behavior: The FPGA forces a 3-bit binary combination (000, 001, 010, 011) onto the output pins. The Arduino reads this and translates it into massive, medium, or tiny square waves on the screen for extreme visual contrast. 
+-Reset behavior: Every 100ms, the FPGA resets its internal stopwatch and edge counter to zero to evaluate the next window. If no switches are active, it defaults to State 0 (Idle flatline). `
 
 ## 8.3 Code Flowchart
 
@@ -366,42 +365,41 @@ Suggested sequence:
 
 | Item                             | Quantity | In Kit? | Need to Buy? | Estimated Cost | Material / Spec               | Why This Choice?          |
 | -------------------------------- | --------:| ------- | ------------ | --------------:| ----------------------------- | ------------------------- |
-| `[RASPI]`                        | `1`      | `Yes`   | `No`         | `0`            | `38 Pin ESP32`                | `[To control components]` |
-| `[Motor Driver]`                 | `[1]`    | `[Yes]` | `[No]`       | `0`            | `[LN296]`                     | `[To drive both motors]`  |
-| `[DC Motors and wheel]`          | `[2]`    | `[No]`  | `[Yes]`      | `[150]`        | `[BO Motors and 6 cm wheels]` | `[high torque motors]`    |
-| `[Buck Converter]`               | `[1]`    | `[No]`  | `[Yes]`      | `[75]`         |                               |                           |
-| `[Li-ion batteries with holder]` | `[1]`    | `[No]`  | `[Yes]`      | `[200]`        |                               |                           |
+| `[FPGA]`                         | `[1]`    | `[Yes]` | `[No]`       | `14000[lab]`   | `[Artix-7 Basys-3 FPGA]`      | `[100MHz hardware sampling without overhead.]` |
+| `[ESP 32]`                       | `[1]`    | `[No]`  | `[Yes]`      | `[400]`        | `[LN296]`                     | `[To drive both motors]`  |
+| `[Arduino UNO ]`                 | `[1]`    | `[No]`  | `[Yes]`      | `[500 ]`       | `[BO Motors and 6 cm wheels]` | `[high torque motors]`    |
+ 
 
 ## 9.2 Material Justification
 
 Explain why you selected your main materials and components.
 
 **Response:**  
-`DC motors (BO motors) were chosen instead of servos or steppers because the system requires continuous rotation for movement rather than precise angular control (Previously, we were considering using steppers as we were planning on tracking movement on the ESP using its relative position from an origin, but since we're using a camera now, this is not required). A motor driver (L298N) was used to allow bidirectional control and speed variation using PWM.`
+`A standard microcontroller cannot effectively sample, debounce, classify, and output high-speed data simultaneously without blocking delays. An FPGA was chosen to build a dedicated hardware pipeline. The ESP32 was selected as the generator because its clock speed allows for microsecond-level signal generation.`
 
 
 ## 9.3 Items You chose
 
 | Item                 | Why Needed               | Purchase Link | Latest Safe Date to Procure | Status       |
 | -------------------- | ------------------------ | ------------- | --------------------------- | ------------ |
-| `BO Motors + Wheels` | `Drive system for car`   | `robu.in`     | `15th April`                | `[Received]` |
-| `Buck Converter`     | `Stable power for ESP32` | `local store` | `before testing`            | `[Received]` |
-| `Li-ion Batteries`   | `Portable power`         | `local store` | `before testing`            | `Recieved`   |
+| `FPGA Board`         | `Analyze the input signals and segregate them`| `robu.in`| `29th April`| `[Received]` |
+| `ESP 32`             | `To generate input signals` | `local store`| `before testing`| `[Received]` |
+| `Arduino`            | `To display Signals based on Channel selection`| `local store`| `before testing`  `[Recieved]` |
 
 ## 9.4 Budget Summary
 
 | Budget Item           | Estimated Cost              |
 | --------------------- | ---------------------------:|
-| Electronics           | `[400]`                     |
-| Mechanical parts      | `[200]`                     |
+| Electronics           | `[900]`                     |
+| Mechanical parts      | `[0]`                     |
 | Fabrication materials | `[0 (Available on campus)]` |
 | Purchased extras      | `[0]`                       |
 | Contingency           | `[300]`                     |
-| **Total**             | `[900]`                     |
+| **Total**             | `[1200]`                     |
 
 ## 9.5 Budget Reflection
 
-If your cost is too high, what can be simplified, removed, substituted, or shared?
+NA
 
 **Response:**  
 
@@ -422,25 +420,25 @@ Include:
 - how documentation will be maintained.
 
 **Response:**  
-
+Tasks were divided based on the strengths of each student and it was seen to it that it would work smoothly and help is provided if needed by anyone, Each Part of the Project was given to a student, with tasks like Code, Implementation, Debugging, Documentation, Material Acquisition, Each student took decision for his/her department and would ask others for their opinion and approval, Progress was checked at every 2 hours with outputs, If a task was taking long all the members would look into it and try to solve it as fast as possible to reduce the delay and speed up the provcess, Documentation was done every 2 hours to keep proper records of the project without any misses iin the timeline.
 
 ## 10.2 Task Breakdown
 
 | Task ID | Task                    | Owner    | Estimated Hours | Deadline     | Dependency | Status |
 | ------- | ----------------------- | -------- | ---------------:| ------------ | ---------- | ------ |
-| T1      | `[Finalize concept]`    | `[Both]` | `2`             | `1st April`  | `None`     | `Done` |
+| T1      | `[Finalize concept]`    | `[All]`  | `16`            | `30th April`  | `None`     | `Done` |
 
 
 ## 10.3 Responsibility Split
 
 | Area                 | Main Owner     | Support Owner |
 | -------------------- | ----------     | ------------- |
-| Concept              | `[Mrugendra]`  | `[Jyoti]`     |
-| Electronics          | `[]`           | `[]`          |
-| Coding               | `[]`           | `[]`          |
+| Concept              | `[]`           | `[]`     |
+| Electronics          | `[Aditi]`           | `[]`          |
+| Coding               | `[Aditi]`           | `[]`          |
 | Mechanical build     | `[]`           | `[]`          |
-| Testing              | `[]`           | `[]`          |
-| Documentation        | `[]`           | `[]`          |
+| Testing              | `[Akshata]`           | `[]`          |
+| Documentation        | `[Sujal]`           | `[]`          |
 
 ---
 
@@ -456,9 +454,9 @@ Expected outcomes:
 - [x] Core interaction decided
 - [x] Sketches made
 - [x] BOM completed
-- [x] Purchase needs identified
+- [ ] Purchase needs identified
 - [ ] Key uncertainty identified
-- [x] Basic feasibility tested
+- [ ] Basic feasibility tested
 
 ### Bi Hour 2 — Build Subsystems
 
@@ -494,10 +492,8 @@ Expected outcomes:
 
 | Days   | Planned Goal   | What Actually Happened | What Changed   | Next Steps     |
 | ------ | -------------- | ---------------------- | -------------- | -------------- |
-| Day 1 | `[Write here]` | `[Write here]`         | `[Write here]` | `[Write here]` |
-| Day 2 | `[Write here]` | `[Write here]`         | `[Write here]` | `[Write here]` |
-| Day 3 | `[Write here]` | `[Write here]`         | `[Write here]` | `[Write here]` |
-| Day 4 | `[Write here]` | `[Write here]`         | `[Write here]` | `[Write here]` |
+| Day 1  | `[A basic simple version of the project to be built]` | `[Write here]`         | `[Write here]` | `[Write here]` |
+| Day 2  | `[Write here]` | `[Write here]`         | `[Write here]` | `[Write here]` |
 
 ---
 
@@ -505,17 +501,17 @@ Expected outcomes:
 
 ## 13.1 Risk Register
 
-| Risk                                                            | Type         | Likelihood | Impact   | Mitigation Plan                                                                       | Owner                |
-| --------------------------------------------------------------- | ------------ | ---------- | -------- | ------------------------------------------------------------------------------------- | -------------------- |
-| WiFi connection between laptop and ESP32 becomes unstable       | `Technical`  | `Medium`   | `High`   | Keep ESP32 close, ensure stable power supply, reduce network load, add fail-safe stop | `[Gopal]`           |
-
+| Risk                                                            | Type         | Likelihood | Impact   | Mitigation Plan                                                                        
+| --------------------------------------------------------------- | ------------ | ---------- | -------- | -------------------------------------------------------------------------------------  
+|Crosstalk / Wire Ringing                                     | `Hardware `  | `High `   | `High`   | Implemented a 1,000-clock-cycle digital low-pass debounce filter inside the Verilog code.| 
+|Ground Loops                                                 | `Electrical `  | `High `   | `Fatal `   | Ensure strict, physical M-M wires connecting all three board GND pins together.  
 
 ## 13.2 Biggest Unknown Right Now
 
 What is the single biggest uncertainty in your project at this stage?
 
 **Response:**  
-
+How to best visually present the invisible edge-counting math happening inside the FPGA fabric to the judges during a live, high-pressure demo. 
 
 ---
 
@@ -524,9 +520,10 @@ What is the single biggest uncertainty in your project at this stage?
 ## 14.1 Technical Testing Plan
 
 | What Needs Testing     | How You Will Test It                                                                 | Success Condition                                                                                    |
-| ---------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
-| `[Wifi connection]`    | `[Check if motor spins via app button]`                                              | `[Both motors accurately respond to wifi signals]`                                                   |
-                       |
+| ---------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------|
+| `[ESP32 Generation ]`  | `[Run the custom "Self-Reporting Logic Analyzer" code on the ESP32 to plot its own pins. ]` | `[Four distinct, stacked waveforms appear on the serial plotter. ]`|
+| `[FPGA Classification ]`| `[Flip SW0, SW1, SW2 independently and monitor Arduino output.]`| `[The Arduino perfectly draws tight, medium, and massive square waves with no visual overlap.]`|
+                
 ## 14.2 Testing and Debugging Log
 
 | Date          | Problem Found                         | Type         | What You Tried                                | Result               | Next Action                                    |
@@ -560,21 +557,7 @@ Include:
 - revisions.
 
 **Response:**  
-`The fabrication process involved designing, manufacturing, assembling, and refining both the physical structure and electronic integration of the system.`
-
-`Design (CAD Modeling):
-The initial model was created using CAD software, where components were designed based on the actual dimensions of the electronic parts. This ensured accurate fitting and minimized errors during assembly.
-Cutting (Laser Cutting):
-The designed parts were fabricated using laser cutting techniques. Sheets were cut precisely according to the CAD model to create the structural base and mounts for components.`
-
-`Components were fixed using adhesives and mechanical supports. Certain parts were intentionally kept modular (not permanently fixed) to allow easy replacement and modification of electronics.
-Surface Finishing:
-Some parts were sanded to smooth rough edges after cutting. Sawdust mixed with adhesive was used to fill gaps and uneven edges, improving structural finish. The final structure was then painted for better aesthetics and durability.`
-
-`Environment Setup (Dark Room Fabrication):
-To enhance projection visibility, a controlled dark environment was created using Z-boards, paper sheets, and bedsheets. This minimized external light interference and improved projection clarity.
-Revisions and Iterations:
-Multiple adjustments were made throughout the process, including refining alignment, improving structural stability, repositioning components, and optimizing the interaction between the physical car and projected environment.`
+` NA.`
 
 ## 16 Build Photos
 
@@ -601,21 +584,21 @@ Suggested images:
 Describe the final version of your project.
 
 **Response:**  
-
+The final build is a 3-channel, Digital Storage Oscilloscope and Logic Analyzer. It utilizes an ESP32 to generate continuous, multiplexed hardware signals. These are fed into a Basys 3 FPGA, which uses custom Verilog to digitally filter out electromagnetic interference, count rising edges in 100ms windows, and mathematically classify the frequency bands. The classification is sent over a parallel bus to an Arduino, which renders distinct waveform visuals in real-time. 
 
 ## 17.2 What Works Well
-
+The input signals generated pur being analyzed accurately and being plotted in 3 channels, an upgrade from the version we made in the beginning, their is no much time delay in signal generation and Signal display, with everything working with very low Latency
 
 
 ## 17.3 What Still Needs Improvement
-
+We wanna connect a Graphic LCD for the display of the output signals to give it a traditional DSO feel and some finishing touch.
 
 ## 17.4 What Changed From the Original Plan
-
+ 
 How did the project change from the initial idea?
 
 **Response:**  
-
+We initially planned for a 4-channel system including a pure "EMI Noise" channel. However, the physical reality of breadboard wire capacitance caused the high-frequency noise signals to flatline. To ensure a flawless, presentation-ready demo, we triaged the system down to 3 highly distinct frequency channels, drastically improving system stability and visual clarity. And created a 4th channel having idle output signals 
 
 ---
 
@@ -629,7 +612,7 @@ How well did you manage time, tasks, and responsibilities?
 
 **Response:**  
 
-
+Our team worked well together and every department went hand-in-hand without much issues, everyone was very co-operative and understood each others weaknesses and strengths deeply, they helped out each other for a smoother and faster process without much delays, The integration between all the 3 components, Arduino, ESP 32 and FPGA Board slowed down the process and delayed our progress, the connection of the graphic LCD also posed a great challenge which was thewn dropped and replaced by Serial plotter, Eacg task was given appropriate time, without anuything lagging behind, tasks and responsibilities were divided to the strengths of the members and everyone worked in unison without any member being un co-operative and lazy.
 ## 18.2 Technical Reflection
 
 What did you learn about:
@@ -642,7 +625,7 @@ What did you learn about:
 
 **Response:**  
 
-
+We learned that software logic doesn't always map 1:1 to hardware reality. In software, a pin toggling is instant. In hardware, wires act as capacitors, fast loops trigger Watchdog OS panics, and unconnected pins act as floating radio antennas picking up ambient room noise. Learning to build a digital debounce filter in Verilog was a major breakthrough in understanding true EXTC engineering. 
 ## 18.3 Design Reflection
 
 What did you learn about:
@@ -663,7 +646,7 @@ What would you improve next?
 
 **Response:**  
 
-` `
+`We would try to add a Graphic LCD for the display of output signals `
 
 ---
 
