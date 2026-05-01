@@ -89,7 +89,7 @@ In 1–2 paragraphs, explain:
 - what technologies are involved.
 
 **Response:**  
-`Creating a Analyzer using an FPGA and Arduino UNO, for easier and fun way to understand the working of a DSO and see the waves on the Craohic LCD to make it even better and worth learning fpr the early teens, there wont be much confusion for the working as there will only be only one switch taking away the confusion created by the traditional methods .`
+`Creating a Digital Oscilloscope for our topic Logic Analyzer using an FPGA, Arduino UNO and ESP 32. The ESP 32 is used as a function generator to generate signals of different frequencies, then the signals are sent to the FPGA which works as the brain of the system and segments the signals into different frequency bands, these segmented signals are then sent to the Arduino which Plots the Signals based on the wish of the user. This Project helps in teaching Eaarly Learners About the working of DSO without much confusion as compared to the trasditional methods.`
 
 ---
 
@@ -121,6 +121,7 @@ What makes your project original?
 
 Describe exactly how a user will use the project.Make it a story
 **Response:**  
+`Early Learners and Teens who are interested in Learning more About Electronic Equipments might find a Traditional DSO very Complicated to use, making it tedious and less interestinf to the individuals
 
                                                   |
 
