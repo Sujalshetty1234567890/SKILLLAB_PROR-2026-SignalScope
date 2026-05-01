@@ -110,7 +110,7 @@ List what inspired the project.
 What makes your project original?
 
 **Response:**
-`The Square waves are generated on Graphic LCD, making it fun to work with rather than the traditional ways,
+`The Tradtional methods are really Complex, amking it hard, hence we created thuis project to deliver an Easy and Interesting, using ESP32, Arduino, and FPGA Boolean board`
 
 
 ---
@@ -121,7 +121,7 @@ What makes your project original?
 
 Describe exactly how a user will use the project.Make it a story
 **Response:**  
-`Early Learners and Teens who are interested in Learning more About Electronic Equipments might find a Traditional DSO very Complicated to use, making it tedious and less interestinf to the individuals
+`To begin, A user in his teen years curious abr Electronic components, loves dwelling with such things and making projects, find out abt DSO, which needs needs for his Project, he finds it really Complex which makes him less interested to go forward with it, instead he gets to know abt this our version of the DSO, which helps him to understand its working in easier ways, making him more involved for it, the user just rotates the potentiometer knob and sees the signals generated, he understands the sginals generated at different fequency bands, throught his the user understands about how the ESP 32 generates input Signal (Works as function generator giving signals of different frequencies), he gets a glimpse of the working of FPGA boolean board, and how it helps in segmenting the signals based on different frequency bands, he also gets to know more abt Arduino Board, through such ways the user not only Learns abt Digital Oscilloscope but also abt ESP 32, FPGA and Arduino, and Signal Generation and Segmentation of Signals for different Frequency Bands`
 
                                                   |
 
@@ -132,7 +132,7 @@ Describe exactly how a user will use the project.Make it a story
 # 4. Definition of Success
 
 ## 4.1 Definition of “Usable”
-
+` For us in the Project Segmentation of Signals of different Frequency Bands, and the display of proper square waves is the definition of usable.`
 
 
 ## 4.2 Minimum Usable Version
@@ -141,11 +141,11 @@ What is the smallest version of this project that still delivers the core experi
 
 **Response:**  
 
-
+`We generated Input signals, through ESP 32, showcased them on Serial Plotter, them it was sent to the FPGA board, which then sends it to the Arduino after Analysis, the Arduino showcases the waves on a serial plotter on 1 channel, hence showcasing a simple but a core experience of a Digital Oscilloscope`
 ## 4.3 Stretch Features
 
 What features are nice to have but not essential?
-
+`Some Features are the Display of Square waveforms on the Graphic LCD, making it interesting for the User to use, and it showcased waveforms on many channels (3-4), creating an extensive experience for the user and to understand more about the waveforms, frequency bands and Signal Generation` 
 
 ---
 
@@ -155,7 +155,7 @@ What features are nice to have but not essential?
 
 Check all that apply.
 
-- [x] Electronics-based
+- [ ] Electronics-based
 
 - [ ] Mechanical
 
@@ -165,7 +165,7 @@ Check all that apply.
 
 - [x] Motorized
 
-- [ ] Sound-based
+- [x] Sound-based
 
 - [x] Light-based
 
