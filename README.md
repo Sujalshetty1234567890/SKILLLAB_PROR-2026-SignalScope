@@ -155,27 +155,27 @@ What features are nice to have but not essential?
 
 Check all that apply.
 
-- [ ] Electronics-based
+- [x] Electronics-based
 
-- [ ] Mechanical
+- [x] Mechanical
 
-- [x] Sensor-based
+- [ ] Sensor-based
 
-- [x] App-connected
+- [ ] App-connected
 
-- [x] Motorized
+- [ ] Motorized
 
-- [x] Sound-based
+- [ ] Sound-based
 
-- [x] Light-based
+- [ ] Light-based
 
 - [x] Screen/UI-based
 
-- [x] Fabricated structure
+- [ ] Fabricated structure
 
-- [x] Game logic based
+- [ ] Game logic based
 
-- [x] Installation
+- [ ] Installation
 
 - [ ] Other:
 
@@ -195,8 +195,10 @@ Include:
 
 ## 5.3 Input / Output Map
 
-| System Part                              | Type            | What It Does                                                               |
-
+| System Part                              | Type            | What It Does|                                                              |
+|`ESP 32`                                  | `Input`         |`It works as an function generator and produces signals of different frequency bands`|
+|`FPGA Boolean Board`                      | `Processor`     |`It works as the brain, Analysing the Signals and segmenting the signals based on Frequency bands and Duty cycles`|
+|`Arduino UNO`                             |`Processor/Output`|`It get the Segmented Signals and Displays the Signals based on the users requests`|
 
 ---
 
@@ -248,9 +250,9 @@ Add a sketch with labels showing:
 
 | Component                 | Quantity | Purpose                               |
 | ------------------------- | --------:| ------------------------------------- |
-| `[Raspi/FPGA]`                 | `1`      | `[Main controller]`                   |
-| `[L298N Motor Driver]`    | `1`      | `[Control Motors]`                    |
-| `[BO Motors]`             | `2`      | `[Rotate wheels]`                     |
+| `[FPGA]`                  | `1`      | `[Main controller]`                   |
+| `[ESP 32]`                | `1`      | `[Input Signal Generator]`            |
+| `[Arduino UNO]`           | `2`      | `[Output signal Decider]`                     |
 | `[Buck Converter]`        | `1`      | `[Power ESP32]`                       |
 | `[Li Ion Battery Pack]`   | `2`      | `[Power]`                             |
 | `[Projector]`             | `1`      | `[Display obstacles]`                 |
