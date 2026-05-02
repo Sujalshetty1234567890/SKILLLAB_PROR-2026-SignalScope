@@ -1,1 +1,218 @@
 Insert your documented code here
+// ============================================================
+# ESP32 4-CHANNEL GENERATOR (WIRE-CAPACITANCE SAFE)
+// ============================================================
+
+const int CH1_PIN = 4;  // Fast Wave 
+const int CH2_PIN = 5;  // Mid Wave 
+const int CH3_PIN = 18; // Slow Wave 
+const int CH4_PIN = 19; // Pure Noise
+
+unsigned long prev1 = 0, prev2 = 0, prev3 = 0, prev4 = 0;
+int state1 = LOW, state2 = LOW, state3 = LOW, state4 = LOW;
+unsigned long noiseInterval = 500;
+
+void setup() {
+  pinMode(CH1_PIN, OUTPUT);
+  pinMode(CH2_PIN, OUTPUT);
+  pinMode(CH3_PIN, OUTPUT);
+  pinMode(CH4_PIN, OUTPUT);
+}
+
+void loop() {
+  unsigned long current = micros();
+
+  // CH 1: FAST WAVE (Toggles every 2ms -> ~25 edges per 100ms window)
+  if (current - prev1 >= 2000) {
+    state1 = !state1; prev1 = current; digitalWrite(CH1_PIN, state1);
+  }
+
+  // CH 2: MID WAVE (Toggles every 10ms -> ~5 edges per 100ms window)
+  if (current - prev2 >= 10000) {
+    state2 = !state2; prev2 = current; digitalWrite(CH2_PIN, state2);
+  }
+
+  // CH 3: SLOW WAVE (Toggles every 30ms -> ~1-2 edges per 100ms window)
+  if (current - prev3 >= 30000) {
+    state3 = !state3; prev3 = current; digitalWrite(CH3_PIN, state3);
+  }
+
+  // CH 4: IDLE (Toggles randomly between 300us and 800us -> ~80+ edges)
+  if (current - prev4 >= noiseInterval) {
+    state4 = !state4; prev4 = current; digitalWrite(CH4_PIN, state4);
+    noiseInterval = random(300, 800); // Slowed down to overcome wire capacitance
+  }
+
+  yield(); 
+}
+
+
+// ============================================================
+# Constraint file code (Vivado)
+// ============================================================
+## Clock signal (100MHz)
+set_property PACKAGE_PIN W5 [get_ports clk]							
+set_property IOSTANDARD LVCMOS33 [get_ports clk]
+create_clock -add -name sys_clk_pin -period 10.00 -waveform {0 5} [get_ports clk]
+
+## INPUT: Basys 3 Switches (SW0 to SW3)
+set_property PACKAGE_PIN V17 [get_ports {sw[0]}]					
+set_property IOSTANDARD LVCMOS33 [get_ports {sw[0]}]
+set_property PACKAGE_PIN V16 [get_ports {sw[1]}]					
+set_property IOSTANDARD LVCMOS33 [get_ports {sw[1]}]
+set_property PACKAGE_PIN W16 [get_ports {sw[2]}]					
+set_property IOSTANDARD LVCMOS33 [get_ports {sw[2]}]
+set_property PACKAGE_PIN W15 [get_ports {sw[3]}]					
+set_property IOSTANDARD LVCMOS33 [get_ports {sw[3]}]
+
+## INPUT: 4-Channel Signal from ESP32 (Pmod Header JB, Top Row)
+set_property PACKAGE_PIN A14 [get_ports {sig_in[0]}]					
+set_property IOSTANDARD LVCMOS33 [get_ports {sig_in[0]}]
+set_property PACKAGE_PIN A16 [get_ports {sig_in[1]}]					
+set_property IOSTANDARD LVCMOS33 [get_ports {sig_in[1]}]
+set_property PACKAGE_PIN B15 [get_ports {sig_in[2]}]					
+set_property IOSTANDARD LVCMOS33 [get_ports {sig_in[2]}]
+set_property PACKAGE_PIN B16 [get_ports {sig_in[3]}]					
+set_property IOSTANDARD LVCMOS33 [get_ports {sig_in[3]}]
+
+## OUTPUT: 3-Bit Bus to Arduino (Pmod Header JA, Pins 1, 2, 3)
+set_property PACKAGE_PIN J1 [get_ports {pmod[0]}]					
+set_property IOSTANDARD LVCMOS33 [get_ports {pmod[0]}]
+set_property PACKAGE_PIN L2 [get_ports {pmod[1]}]					
+set_property IOSTANDARD LVCMOS33 [get_ports {pmod[1]}]
+set_property PACKAGE_PIN J2 [get_ports {pmod[2]}]					
+set_property IOSTANDARD LVCMOS33 [get_ports {pmod[2]}]
+
+// ============================================================
+#Verilog code (Vivado)
+// ============================================================
+`timescale 1ns / 1ps
+
+module analyzer_core (
+    input  wire clk,          // 100MHz System Clock
+    input  wire [3:0] sw,     // SW0 to SW3 for Channel Selection
+    input  wire [3:0] sig_in, // 4-Channel input from ESP32
+    output reg  [2:0] pmod    // 3-bit parallel bus to Arduino
+);
+
+    // 1. Channel Multiplexer
+    reg active_sig;
+    always @(*) begin
+        if (sw[0])      active_sig = sig_in[0]; 
+        else if (sw[1]) active_sig = sig_in[1]; 
+        else if (sw[2]) active_sig = sig_in[2]; 
+        else if (sw[3]) active_sig = sig_in[3]; 
+        else            active_sig = 1'b0;      
+    end
+
+    // 2. Synchronizer
+    reg [1:0] sync_reg;
+    always @(posedge clk) begin
+        sync_reg <= {sync_reg[0], active_sig};
+    end
+    wire safe_sig = sync_reg[1];
+
+    // 3. HARDWARE DEBOUNCER (The Magic Filter)
+    // Ignores crosstalk and ringing by requiring 1000 stable clocks
+    reg [9:0] debounce_cnt = 0;
+    reg clean_sig = 0;
+    
+    always @(posedge clk) begin
+        if (safe_sig == clean_sig) begin
+            debounce_cnt <= 0; // Reset counter if signal matches
+        end else begin
+            debounce_cnt <= debounce_cnt + 1;
+            if (debounce_cnt == 1000) begin
+                clean_sig <= safe_sig; // Lock in the new state
+                debounce_cnt <= 0;
+            end
+        end
+    end
+
+    // 4. Clean Edge Detector
+    reg sig_prev;
+    always @(posedge clk) begin
+        sig_prev <= clean_sig;
+    end
+    wire rising_edge = (clean_sig == 1'b1 && sig_prev == 1'b0);
+
+    // 5. 100ms Stopwatch (10,000,000 clocks)
+    localparam WINDOW_MAX = 10_000_000; 
+    reg [23:0] timer = 0;
+    reg [15:0] edge_count = 0;
+
+    // 6. Hardware Classifier 
+    always @(posedge clk) begin
+        if (sw == 4'b0000) begin
+            pmod <= 3'b000; // IDLE
+            timer <= 0;
+            edge_count <= 0;
+        end else if (timer < WINDOW_MAX - 1) begin
+            timer <= timer + 1;
+            if (rising_edge) edge_count <= edge_count + 1;
+        end else begin
+            // NEW RECALIBRATED THRESHOLDS
+            if (edge_count == 0)      pmod <= 3'b000; // State 0: IDLE
+            else if (edge_count <= 4) pmod <= 3'b011; // State 3: SLOW WAVE (CH3)
+            else if (edge_count <= 15)pmod <= 3'b010; // State 2: MID WAVE (CH2)
+            else if (edge_count <= 60)pmod <= 3'b001; // State 1: FAST WAVE (CH1)
+            else                      pmod <= 3'b100; // State 4: NOISE (CH4)
+            
+            timer <= 0;
+            edge_count <= 0;
+        end
+    end
+
+endmodule
+
+// ============================================================
+// Arduino Display - Waveform
+// ============================================================
+
+const int bit0_pin = 10;
+const int bit1_pin = 11;
+const int bit2_pin = 12;
+
+unsigned long tick = 0; 
+
+void setup() {
+  Serial.begin(115200); 
+  pinMode(bit0_pin, INPUT);
+  pinMode(bit1_pin, INPUT);
+  pinMode(bit2_pin, INPUT);
+}
+
+void loop() {
+  int b0 = digitalRead(bit0_pin);
+  int b1 = digitalRead(bit1_pin);
+  int b2 = digitalRead(bit2_pin);
+  
+  int current_state = (b2 << 2) | (b1 << 1) | b0;
+  int plot_value = 0;
+  
+  tick++; 
+
+  // Draw continuous waves based on FPGA categorization
+  switch(current_state) {
+    case 0: // IDLE
+      plot_value = 0; 
+      break;
+    case 1: // FAST WAVE (CH1) -> Short, tight squares
+      plot_value = (tick % 6 < 3) ? 10 : 0; 
+      break;
+    case 2: // MID WAVE (CH2) -> Slightly bigger squares
+      plot_value = (tick % 20 < 10) ? 10 : 0; 
+      break;
+    case 3: // SLOW WAVE (CH3) -> More bigger squares
+      plot_value = (tick % 60 < 30) ? 10 : 0; 
+      break;
+    case 4: // IDLE STATE (CH4) -> Flatline
+      plot_value = random(0, 11); 
+      break;
+  }
+
+  // Y-Axis Locks and Signal
+  Serial.print("0 12 ");
+  Serial.println(plot_value); 
+  delay(15); 
+}
