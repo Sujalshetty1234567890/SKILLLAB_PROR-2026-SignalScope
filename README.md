@@ -63,10 +63,10 @@ By the final review, this README should clearly show:
 
 | Name                  | Primary Role                    | Secondary Role   | Strengths Brought to the Project |
 | --------------        | ------------------------------- | --------------   | -------------------------------- |
-| `Aryan Bharti`        | `[Electronics / Coding / App ]` | `Documentation`  | `Documentation, Gift of Gab `    |
-| `Aaditi Chougule`     | `[Electronics / Fabrication]`   | `[Coding]`       | `Material Handling, Hardware`    |
-| `Akshata Sarawadekar` | ``|``|``|
-|`Sujal Shetty`         |``|``|``|
+| `Aryan Bharati`       | `[Coding]`                      |`[Logic Developement]`| `Coding and Logic Development`    |
+| `Aaditi Chougule`     | `[Debugging]`                   |`[Hardware Intgeration]]`| `Problem Solving and Code Debugging`|
+| `Akshata Sarawadekar` | `[Implementation]`              |`[Prototype Development]`|`Implementation of the Components`|
+|`Sujal Shetty`         |`[Documentation]`                |`[Material Acquisition/Handling]`|`Documentation, Material Handling`|
 
 ## 1.3 Project Title
 
@@ -102,7 +102,7 @@ List what inspired the project.
 | Source Type | Title / Link                                                        | What Inspired You                                                                         |
 | ----------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | `[Video]`   | `https://youtube.com/shorts/fqcnga908rw?si=p3kwRwn5LOU0oAG_`        | `How Signals Analyzing can be made Easy and Fun for Early Interest induction in Early Teens` |
-|             |                                                                     |                                                                                           |
+| `[Video]`   | `https://youtu.be/-_ALmpx59SQ?si=7MjX1_3MjPhXbbAQ`                  |                                                                                           |
 |             |                                                                     |                                                                                           |
 
 ## 2.2 Original Twist
@@ -298,8 +298,8 @@ Insert a hand-drawn or software-made circuit diagram.
 
 | Question         | Response                                                                                                                                          |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Voltage required | `3.3V for ESP32, Arduino and FPGA`                                                                                                                |
- 
+| Voltage required | `3.3V for ESP32, Arduino and FPGA, 5 V for Arduino (Due to Graphic LCD, 5 OR 3.3 V FOR Graphic LCD`                                               |
+
 
 ---
 
